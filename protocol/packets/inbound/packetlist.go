@@ -5,6 +5,7 @@ import (
 	"github.com/firelop/GOlem/protocol/packets/inbound/configuration"
 	"github.com/firelop/GOlem/protocol/packets/inbound/handshake"
 	"github.com/firelop/GOlem/protocol/packets/inbound/login"
+	"github.com/firelop/GOlem/protocol/packets/inbound/play"
 	"github.com/firelop/GOlem/protocol/packets/inbound/status"
 	"github.com/firelop/GOlem/server"
 )
@@ -28,6 +29,10 @@ var inboundPackets = map[uint8]map[int32]packets.InboundPacket{
 		0x02: &configuration.PluginMessage{},
 		0x03: &configuration.ACKFinishConfiguration{},
 		0x07: &configuration.KnownPacks{},
+	},
+	server.INTENT_PLAY: {
+		0x0B: &play.ClientStatus{},
+		0x0C: &play.ClientTickEnd{},
 	},
 }
 

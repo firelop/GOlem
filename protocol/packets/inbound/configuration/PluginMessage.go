@@ -1,8 +1,7 @@
 package configuration
 
 import (
-	"log"
-
+	"github.com/firelop/GOlem/logger"
 	"github.com/firelop/GOlem/protocol"
 	"github.com/firelop/GOlem/protocol/packets"
 	"github.com/firelop/GOlem/server"
@@ -27,9 +26,7 @@ func (p *PluginMessage) Read(pb *protocol.PacketBuffer) {
 }
 
 func (p *PluginMessage) Handle(session *server.Session) {
-	if session.Server.Debug {
-		log.Println("Plugin message received:", p.Channel)
-		log.Println("Data:", string(p.Data))
-	}
+	logger.Debug(logger.Protocol, "Plugin message received: ", p.Channel)
+	logger.Debug(logger.Protocol, "Data: ", string(p.Data))
 	// TODO: Handle plugin message
 }

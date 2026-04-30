@@ -1,9 +1,9 @@
 package server
 
 import (
-	"log"
 	"net"
 
+	"github.com/firelop/GOlem/logger"
 	"github.com/firelop/GOlem/protocol"
 )
 
@@ -27,9 +27,7 @@ type Session struct {
 }
 
 func (s *Session) UpdateState(state uint8) {
-	if s.Server.Debug {
-		log.Println("State updated from", s.State, "to", state)
-	}
+	logger.Debug(logger.Server, "State updated from ", s.State, " to ", state)
 	s.State = state
 }
 

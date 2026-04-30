@@ -19,7 +19,7 @@ type Login struct {
 	ReducedDebugInfo    bool
 	EnableRespawnScreen bool
 	DoLimitedCrafting   bool
-	DimensionType       string // Identifier
+	DimensionType       int32  // Registry Index
 	DimensionName       string // Identifier
 	HashedSeed          int64
 	GameMode            byte
@@ -29,6 +29,7 @@ type Login struct {
 	HasDeathLocation    bool
 	DeathLocation       datatypes.WorldPosition
 	PortalCooldown      int32
+	SeaLevel            int32
 	EnforcesSecureChat  bool
 }
 
@@ -54,7 +55,7 @@ func (l *Login) Write(pb *protocol.PacketBuffer) {
 	pb.WriteBool(l.EnableRespawnScreen)
 	pb.WriteBool(l.DoLimitedCrafting)
 
-	pb.WriteString(l.DimensionType)
+	pb.WriteVarInt(l.DimensionType)
 	pb.WriteString(l.DimensionName)
 	pb.WriteInt64(l.HashedSeed)
 	pb.WriteByte(l.GameMode)
@@ -69,6 +70,7 @@ func (l *Login) Write(pb *protocol.PacketBuffer) {
 	}
 
 	pb.WriteVarInt(l.PortalCooldown)
+	pb.WriteVarInt(l.SeaLevel)
 	pb.WriteBool(l.EnforcesSecureChat)
 }
 

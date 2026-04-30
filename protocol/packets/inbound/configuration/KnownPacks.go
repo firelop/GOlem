@@ -1,6 +1,7 @@
 package configuration
 
 import (
+	"github.com/firelop/GOlem/logger"
 	"github.com/firelop/GOlem/protocol"
 	"github.com/firelop/GOlem/protocol/packets"
 	"github.com/firelop/GOlem/protocol/packets/outbound/configuration"
@@ -33,9 +34,7 @@ func (k *KnownPacks) Read(pb *protocol.PacketBuffer) {
 }
 
 func (k *KnownPacks) Handle(session *server.Session) {
-	if session.Server.Debug {
-		for _, entry := range k.Entries {
-			println("(Client) Known pack: ", entry.Namespace, entry.ID, entry.Version)
-		}
+	for _, entry := range k.Entries {
+		logger.Debug(logger.Protocol, "(Client) Known pack: ", entry.Namespace, entry.ID, entry.Version)
 	}
 }

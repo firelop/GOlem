@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"math"
 
 	"github.com/firelop/GOlem/protocol/datatypes"
 	"github.com/google/uuid"
@@ -125,6 +126,30 @@ func (pb *PacketBuffer) ReadByteArray() ([]byte, error) {
 	return res, nil
 }
 
+func (pb *PacketBuffer) ReadFloat() (float32, error) {
+	data := pb.Next(4)
+	if len(data) < 4 {
+		return 0, io.ErrUnexpectedEOF
+	}
+	return math.Float32frombits(binary.BigEndian.Uint32(data)), nil
+}
+
+func (pb *PacketBuffer) ReadDouble() (float64, error) {
+	data := pb.Next(8)
+	if len(data) < 8 {
+		return 0, io.ErrUnexpectedEOF
+	}
+	return math.Float64frombits(binary.BigEndian.Uint64(data)), nil
+}
+
+func (pb *PacketBuffer) ReadInt() (int32, error) {
+	data := pb.Next(4)
+	if len(data) < 4 {
+		return 0, io.ErrUnexpectedEOF
+	}
+	return int32(binary.BigEndian.Uint32(data)), nil
+}
+
 // Write methods
 
 func (pb *PacketBuffer) WriteVarInt(value int32) {
@@ -177,6 +202,24 @@ func (pb *PacketBuffer) WriteByteArray(value []byte) {
 func (pb *PacketBuffer) WritePosition(pos datatypes.Position) {
 	encode_pos := (int64(pos.X&0x3FFFFFF) << 38) | (int64(pos.Z&0x3FFFFFF) << 12) | int64(pos.Y&0xFFF)
 	pb.WriteInt64(encode_pos)
+}
+
+func (pb *PacketBuffer) WriteFloat(value float32) {
+	var temp [4]byte
+	binary.BigEndian.PutUint32(temp[:], math.Float32bits(value))
+	pb.Write(temp[:])
+}
+
+func (pb *PacketBuffer) WriteDouble(value float64) {
+	var temp [8]byte
+	binary.BigEndian.PutUint64(temp[:], math.Float64bits(value))
+	pb.Write(temp[:])
+}
+
+func (pb *PacketBuffer) WriteInt(value int32) {
+	var temp [4]byte
+	binary.BigEndian.PutUint32(temp[:], uint32(value))
+	pb.Write(temp[:])
 }
 
 // Generic functions

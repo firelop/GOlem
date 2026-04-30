@@ -1,7 +1,7 @@
 package login
 
 import (
-	"log"
+	"github.com/firelop/GOlem/logger"
 
 	"github.com/firelop/GOlem/protocol"
 	"github.com/firelop/GOlem/protocol/packets"
@@ -29,7 +29,7 @@ func (l *LoginStart) Read(pb *protocol.PacketBuffer) {
 }
 
 func (l *LoginStart) Handle(session *server.Session) {
-	log.Println("Login start for ", l.Username, " with UUID ", l.UUID)
+	logger.Debug(logger.Protocol, "Login start for ", l.Username, " with UUID ", l.UUID)
 
 	successPacket := &outbound.Success{
 		UUID:     l.UUID,

@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"log"
 	"net"
+	"os"
 	"strconv"
 
+	"github.com/firelop/GOlem/logger"
 	"github.com/firelop/GOlem/protocol"
 	"github.com/firelop/GOlem/protocol/packets/inbound"
 	"github.com/firelop/GOlem/server"
@@ -21,16 +22,17 @@ func main() {
 func start(s *server.Server) {
 	listener, err := net.Listen("tcp", s.Address+":"+strconv.Itoa(int(s.Port)))
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err)
+		os.Exit(1)
 	}
 	defer listener.Close()
 
-	log.Println("Server started on ", s.Address, ":", s.Port)
+	logger.Info("Server started on ", s.Address, ":", s.Port)
 
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Println(err)
+			logger.Error(err)
 			continue
 		}
 		go handleConnection(s, conn)
@@ -49,35 +51,27 @@ func handleConnection(s *server.Server, conn net.Conn) {
 		packetLength, err := readVarIntFromConn(reader)
 
 		if err != nil {
-			if s.Debug {
-				log.Println("Error reading packet length:", err)
-			}
+			logger.Debug(logger.Network, "Error reading packet length:", err)
 			return
 		}
 
 		packetData := make([]byte, packetLength)
 		_, err = io.ReadFull(reader, packetData)
 		if err != nil {
-			if s.Debug {
-				log.Println("Error reading packet data:", err)
-			}
+			logger.Error("Error reading packet data:", err)
 			return
 		}
 		pb.Reset()
 		pb.Write(packetData)
 		packetID, _ := pb.ReadVarInt()
 
-		if s.Debug {
-			log.Printf("[->] ID: 0x%X, Size: %d", packetID, packetLength)
-		}
+		logger.Debugf(logger.Network, "[->] ID: 0x%X, Size: %d\n", packetID, packetLength)
 
 		packet := inbound.GetNewInboundPacket(session.State, packetID)
 		if packet == nil {
-			if s.Debug {
-				log.Println("Packet not found with id: ", packetID, " in state: ", session.State)
-				log.Println("Packet data: ", packetData)
-			}
-			continue // Packet not found, ignore it
+			logger.Warn("Packet not found with id: ", packetID, " in state: ", session.State)
+			logger.Warn(packetData)
+			continue
 		}
 
 		packet.Read(pb)
@@ -108,7 +102,7 @@ func readVarIntFromConn(reader io.Reader) (int32, error) {
 		shift += 7
 
 		if shift >= 35 {
-			return 0, errors.New("VarInt trop grand (Format invalide)")
+			return 0, errors.New("VarInt is too large")
 		}
 	}
 }

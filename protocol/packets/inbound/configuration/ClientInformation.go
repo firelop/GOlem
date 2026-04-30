@@ -1,15 +1,11 @@
 package configuration
 
 import (
-	"encoding/base64"
-	"log"
-
-	nbtstructs "github.com/firelop/GOlem/nbt"
+	"github.com/firelop/GOlem/nbt/registries"
 	"github.com/firelop/GOlem/protocol"
 	"github.com/firelop/GOlem/protocol/packets"
 	"github.com/firelop/GOlem/protocol/packets/outbound/configuration"
 	"github.com/firelop/GOlem/server"
-	"github.com/sandertv/gophertunnel/minecraft/nbt"
 )
 
 type ClientInformation struct {
@@ -57,131 +53,47 @@ func (c *ClientInformation) Handle(session *server.Session) {
 		},
 	})
 
-	// Send registry data
-
-	data, err := nbt.MarshalEncoding(nbtstructs.NewOverworldDimensionType(), nbt.NetworkBigEndian)
-
-	var dimensionType nbtstructs.DimensionType
-	err = nbt.UnmarshalEncoding(data, &dimensionType, nbt.NetworkBigEndian)
-
-	log.Println("NBT", dimensionType)
-
-	if err != nil {
-		panic(err)
-	}
-
-	// Print data as base64
-	log.Println(base64.StdEncoding.EncodeToString(data))
-
-	dimensionTypes := make([]configuration.RegistryDataEntries, len(session.Server.Worlds))
-
-	i := 0
-	for k := range session.Server.Worlds {
-		// TODO: Customize dimension types
-
-		dimensionTypes[i] = configuration.RegistryDataEntries{
-			Name:      k,
-			IsPresent: true,
-			Value:     data,
-		}
-		i++
-	}
-
-	packets.SendPacket(session, &configuration.RegistryData{
-		RegistryID: "minecraft:dimension_type",
-		Entries:    dimensionTypes,
-	})
-
-	// Required mob variant registry
-	packets.SendPacket(session, &configuration.RegistryData{
-		RegistryID: "minecraft:cat_variant",
-		Entries: []configuration.RegistryDataEntries{
+	packets.SendPacket(session, &configuration.UpdateTags{ // TODO: Send actual tags instead of empty ones. I don't really know why this packet is necessary
+		Registries: []configuration.RegistryTagsEntry{
 			{
-				Name:      "minecraft:tabby",
-				IsPresent: false,
-				Value:     []byte{},
+				Identifier: "minecraft:timeline",
+				Tags: []configuration.TagEntry{
+					{
+						Identifier: "minecraft:in_end",
+						Tags:       []int32{},
+					},
+					{
+						Identifier: "minecraft:in_nether",
+						Tags:       []int32{},
+					},
+					{
+						Identifier: "minecraft:in_overworld",
+						Tags:       []int32{},
+					},
+				},
 			},
 		},
 	})
 
-	packets.SendPacket(session, &configuration.RegistryData{
-		RegistryID: "minecraft:cow_variant",
-		Entries: []configuration.RegistryDataEntries{
-			{
-				Name:      "minecraft:cow",
-				IsPresent: false,
-				Value:     []byte{},
-			},
-		},
-	})
+	// TODO: Don't parse every registry every time
+	//sendRegistry(session, "minecraft:timeline", registries.Timeline)
+	sendRegistry(session, "minecraft:dimension_type", registries.DimensionType)
+	sendRegistry(session, "minecraft:worldgen/biome", registries.Biome)
+	sendRegistry(session, "minecraft:damage_type", registries.DamageType)
+	sendRegistry(session, "minecraft:wolf_variant", registries.WolfVariant)
+	sendRegistry(session, "minecraft:wolf_sound_variant", registries.WolfSoundVariant)
+	sendRegistry(session, "minecraft:painting_variant", registries.PaintingVariant)
+	sendRegistry(session, "minecraft:cat_variant", registries.CatVariant)
+	sendRegistry(session, "minecraft:chicken_variant", registries.ChickenVariant)
+	sendRegistry(session, "minecraft:cow_variant", registries.CowVariant)
+	sendRegistry(session, "minecraft:frog_variant", registries.FrogVariant)
+	sendRegistry(session, "minecraft:pig_variant", registries.PigVariant)
+	sendRegistry(session, "minecraft:zombie_nautilus_variant", registries.ZombieNautilusVariant)
 
-	packets.SendPacket(session, &configuration.RegistryData{
-		RegistryID: "minecraft:chicken_variant",
-		Entries: []configuration.RegistryDataEntries{
-			{
-				Name:      "minecraft:chicken",
-				IsPresent: false,
-				Value:     []byte{},
-			},
-		},
-	})
-
-	packets.SendPacket(session, &configuration.RegistryData{
-		RegistryID: "minecraft:frog_variant",
-		Entries: []configuration.RegistryDataEntries{
-			{
-				Name:      "minecraft:frog",
-				IsPresent: false,
-				Value:     []byte{},
-			},
-		},
-	})
-
-	packets.SendPacket(session, &configuration.RegistryData{
-		RegistryID: "minecraft:pig_variant",
-		Entries: []configuration.RegistryDataEntries{
-			{
-				Name:      "minecraft:pig",
-				IsPresent: false,
-				Value:     []byte{},
-			},
-		},
-	})
-
-	packets.SendPacket(session, &configuration.RegistryData{
-		RegistryID: "minecraft:wolf_variant",
-		Entries: []configuration.RegistryDataEntries{
-			{
-				Name:      "minecraft:pale",
-				IsPresent: false,
-				Value:     []byte{},
-			},
-		},
-	})
-
-	packets.SendPacket(session, &configuration.RegistryData{
-		RegistryID: "minecraft:zombie_nautilus_variant",
-		Entries: []configuration.RegistryDataEntries{
-			{
-				Name:      "minecraft:zombie_nautilus",
-				IsPresent: false,
-				Value:     []byte{},
-			},
-		},
-	})
-
-	packets.SendPacket(session, &configuration.RegistryData{
-		RegistryID: "minecraft:painting_variant",
-		Entries: []configuration.RegistryDataEntries{
-			{
-				Name:      "minecraft:kebab",
-				IsPresent: false,
-				Value:     []byte{},
-			},
-		},
-	})
-
-	// Send finish configuration
 	packets.SendPacket(session, &configuration.FinishConfiguration{})
+}
 
+func sendRegistry(session *server.Session, id string, data map[string]any) {
+	regData := registries.RegistryStructToRegistryData(id, data)
+	packets.SendPacket(session, &regData)
 }

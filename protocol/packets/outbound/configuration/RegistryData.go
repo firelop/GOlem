@@ -6,7 +6,7 @@ import (
 	"github.com/firelop/GOlem/server"
 )
 
-type RegistryDataEntries struct {
+type RegistryDataEntry struct {
 	Name      string
 	IsPresent bool
 	Value     []byte
@@ -14,7 +14,7 @@ type RegistryDataEntries struct {
 
 type RegistryData struct {
 	RegistryID string
-	Entries    []RegistryDataEntries
+	Entries    []RegistryDataEntry
 }
 
 func (r *RegistryData) New() packets.OutboundPacket {
@@ -27,7 +27,7 @@ func (r *RegistryData) ID() int32 {
 
 func (r *RegistryData) Write(pb *protocol.PacketBuffer) {
 	pb.WriteString(r.RegistryID)
-	protocol.WritePrefixedArray(pb, r.Entries, func(pb *protocol.PacketBuffer, entry RegistryDataEntries) {
+	protocol.WritePrefixedArray(pb, r.Entries, func(pb *protocol.PacketBuffer, entry RegistryDataEntry) {
 		pb.WriteString(entry.Name)
 		pb.WriteBool(entry.IsPresent)
 		if entry.IsPresent {

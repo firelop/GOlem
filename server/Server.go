@@ -3,6 +3,7 @@ package server
 import (
 	"net"
 
+	"github.com/firelop/GOlem/logger"
 	"github.com/firelop/GOlem/protocol/datatypes"
 )
 
@@ -24,17 +25,26 @@ type Server struct {
 
 	Worlds map[string]*datatypes.World
 
-	Debug bool
+	Debug map[logger.Channel]bool
 }
 
 func NewServer(address string, port uint16) *Server {
 	worlds := make(map[string]*datatypes.World)
 	worlds["world"] = datatypes.NewWorld("world", "minecraft:overworld", false, 0, *datatypes.NewPosition(0, 64, 0))
 
+	debugMap := map[logger.Channel]bool{
+		logger.Protocol: true,
+		logger.NBT:      true,
+		logger.Server:   true,
+		logger.Network:  true,
+	}
+
+	logger.DebugChannels = debugMap
+
 	return &Server{
 		Address: address,
 		Port:    port,
-		Debug:   true,
+		Debug:   debugMap,
 
 		ViewDistance:        10,
 		SimulationDistance:  10,
